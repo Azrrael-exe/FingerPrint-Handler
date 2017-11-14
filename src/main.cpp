@@ -3,8 +3,9 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <string.h>
-#include <fstream>
+
 #include <iostream>
+#include <fstream>
 
 #include <dpfpdd.h>
 #include <dpfj.h>
@@ -181,7 +182,6 @@ int CaptureFinger(const char* szFingerName, DPFPDD_DEV hReader, DPFJ_FMD_FORMAT 
 	return result;
 }
 
-
 int main(){
 	// ::: Initalize Library and Open Device :::
 	dpfpdd_init(); 													// Initalize Library
@@ -200,15 +200,14 @@ int main(){
 	printf("Results : %u\n", results);
 	printf("vFmdSize : %u\n", vFmdSize[0]);
 	printf("vFmd :");
+
+	std::ofstream output ("data/finger" , std::ios::out | std::ios::binary);
+
 	for(int i=0;i<vFmdSize[0];i++){
-		printf("%s\n", vFmd[i]);
+		output.write(reinterpret_cast<const char*>(&vFmd[0][i]), sizeof(vFmd[0]));
 	}
 
-	// std::ofstream output( "my_file.dat", std::ios::out | std::ios::binary );
-	// // output.write((vFmd[0]), sizeof(vFmd[0]));
-	// // output.write(reinterpret_cast<const char*>(vFmd[0]), sizeof(vFmd[0]));
-
-
+	output.close();
 
 	// ::: Close Device and Release Library :::
 	CloseReader(hReader);
