@@ -32,4 +32,4 @@
 *.app
 
 #Finger Print Data
-data/
+*.bin
