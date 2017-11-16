@@ -31,5 +31,5 @@
 *.out
 *.app
 
-#Finge Print Data
-data/*.*
+#Finger Print Data
+data/

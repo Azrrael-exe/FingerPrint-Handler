@@ -81,7 +81,6 @@ int CloseReader(DPFPDD_DEV& dev){
 	}
 	return result;
 }
-
 int CaptureFinger(const char* szFingerName, DPFPDD_DEV hReader, DPFJ_FMD_FORMAT nFtType, unsigned char** ppFt, unsigned int* pFtSize){
 	int result = 0;
 	*ppFt = NULL;
@@ -174,7 +173,6 @@ int CaptureFinger(const char* szFingerName, DPFPDD_DEV hReader, DPFJ_FMD_FORMAT 
 			}
 			continue;
 		}
-
 		break;
 	}
 
@@ -189,25 +187,46 @@ int main(){
 	DPFPDD_DEV hReader = NULL; 							//handle of the selected reader
 	hReader = SelectAndOpenReader(szReader, sizeof(szReader));
 
+	unsigned char* vFmd;
+	unsigned int vFmdSize;
 
-	const int nFingerCnt = 1;
-	unsigned char* vFmd[nFingerCnt];
-	unsigned int vFmdSize[nFingerCnt];
-	char* vFingerName[nFingerCnt];
-
-	int results = CaptureFinger("1128264989", hReader, DPFJ_FMD_ANSI_378_2004, &vFmd[0], &vFmdSize[0]);
+	int results = CaptureFinger("1128264989", hReader, DPFJ_FMD_ANSI_378_2004, &vFmd, &vFmdSize);
 
 	printf("Results : %u\n", results);
-	printf("vFmdSize : %u\n", vFmdSize[0]);
-	printf("vFmd :");
+	printf("vFmdSize : %u\n", vFmdSize);
+	printf("vFmd : %s\n", vFmd);
 
 	std::ofstream output ("data/finger" , std::ios::out | std::ios::binary);
-
-	for(int i=0;i<vFmdSize[0];i++){
-		output.write(reinterpret_cast<const char*>(&vFmd[0][i]), sizeof(vFmd[0]));
-	}
-
+	output.write(reinterpret_cast<const char*>(&vFmd), vFmdSize);
 	output.close();
+
+	std::streampos size;
+	char* inFmd;
+
+	std::ifstream input ("data/finger", std::ios::in|std::ios::binary|std::ios::ate);
+	size = input.tellg();
+	inFmd = new char [size];
+	input.seekg (0, std::ios::beg);
+	input.read (inFmd, size);
+	input.close();
+
+	//printf("vFmdSize : %u\n", size);
+	printf("vFmd : %s\n", inFmd);
+
+	// int result = dpfj_identify(
+	// 	DPFJ_FMD_ANSI_378_2004, 			// Format
+	// 	vFmd[nFingerCnt - 1],
+	// 	vFmdSize[nFingerCnt - 1],
+	// 	0,
+	// 	DPFJ_FMD_ANSI_378_2004,
+	// 	nFingerCnt - 1,
+	// 	vFmd,
+	// 	vFmdSize,
+	// 	falsepositive_rate,
+	// 	&nCandidateCnt,
+	// 	vCandidates
+	// );
+
 
 	// ::: Close Device and Release Library :::
 	CloseReader(hReader);
