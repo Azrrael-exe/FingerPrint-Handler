@@ -115,49 +115,21 @@ int main(){
 	DPFPDD_DEV hReader = NULL; 							//handle of the selected reader
 	hReader = SelectAndOpenReader(szReader, sizeof(szReader));
 
-	unsigned char* vFmd;
-	unsigned int vFmdSize;
+	unsigned char* finger_template;
+	unsigned int finger_template_size;
 
-	int results = CaptureFinger("1128264989", hReader, DPFJ_FMD_ANSI_378_2004, &vFmd, &vFmdSize);
+	int results = CaptureFinger("1128264989", hReader, DPFJ_FMD_ANSI_378_2004, &finger_template, &finger_template_size);
 
 	printf("Results : %u\n", results);
-	printf("vFmdSize : %u\n", vFmdSize);
-	printf("vFmd : %s\n", vFmd);
+	printf("vFmdSize : %u\n", finger_template_size);
 
-	std::ofstream output ("data/finger" , std::ios::out | std::ios::binary);
-	output.write(reinterpret_cast<const char*>(&vFmd), vFmdSize);
+	std::ofstream output ("data/finger");
+	output.write(reinterpret_cast<char*>(&finger_template), finger_template_size);
 	output.close();
-
-	std::streampos size;
-	char* inFmd;
-
-	std::ifstream input ("data/finger", std::ios::in|std::ios::binary|std::ios::ate);
-	size = input.tellg();
-	inFmd = new char[size];
-	input.seekg (0, std::ios::beg);
-	input.read (inFmd, size);
-	input.close();
-
-	//printf("vFmdSize : %u\n", size);
-	printf("vFmd : %s\n", inFmd);
-
-	// int result = dpfj_identify(
-	// 	DPFJ_FMD_ANSI_378_2004, 			// Format
-	// 	vFmd[nFingerCnt - 1],
-	// 	vFmdSize[nFingerCnt - 1],
-	// 	0,
-	// 	DPFJ_FMD_ANSI_378_2004,
-	// 	nFingerCnt - 1,
-	// 	vFmd,
-	// 	vFmdSize,
-	// 	falsepositive_rate,
-	// 	&nCandidateCnt,
-	// 	vCandidates
-	// );
-
 
 	// ::: Close Device and Release Library :::
 	CloseReader(hReader);
 	dpfpdd_exit();
+	printf("Capture Done!\n");
   return 0;
 }

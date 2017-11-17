@@ -115,46 +115,71 @@ int main(){
 	DPFPDD_DEV hReader = NULL; 							//handle of the selected reader
 	hReader = SelectAndOpenReader(szReader, sizeof(szReader));
 
-	unsigned char* vFmd;
-	unsigned int vFmdSize;
-
-	int results = CaptureFinger("1128264989", hReader, DPFJ_FMD_ANSI_378_2004, &vFmd, &vFmdSize);
-
-	printf("Results : %u\n", results);
-	printf("vFmdSize : %u\n", vFmdSize);
-	printf("vFmd : %s\n", vFmd);
-
-	std::ofstream output ("data/finger" , std::ios::out | std::ios::binary);
-	output.write(reinterpret_cast<const char*>(&vFmd), vFmdSize);
-	output.close();
+	unsigned char* finger_templates[1];
+	unsigned int finger_templates_size[1];
 
 	std::streampos size;
 	char* inFmd;
 
-	std::ifstream input ("data/finger", std::ios::in|std::ios::binary|std::ios::ate);
+	std::ifstream input ("data/finger");
 	size = input.tellg();
 	inFmd = new char[size];
 	input.seekg (0, std::ios::beg);
 	input.read (inFmd, size);
 	input.close();
 
-	//printf("vFmdSize : %u\n", size);
-	printf("vFmd : %s\n", inFmd);
+	printf("Input Size : %u\n", int(size));
+	finger_templates[0] = reinterpret_cast<unsigned char*>(inFmd);;
+	finger_templates_size[0] = int(size);
 
+	printf("Template : %s\n", finger_templates[0]);
+
+	unsigned char* vFmd;
+	unsigned int vFmdSize;
+
+	int results = CaptureFinger("1128264989", hReader, DPFJ_FMD_ANSI_378_2004, &vFmd, &vFmdSize);
+
+	printf("Capture : %s\n", vFmd);
+
+	//run identification
+
+	//target false positive identification rate: 0.00001
+	//for a discussion of  how to evaluate dissimilarity scores, as well as the statistical validity of the dissimilarity score and error rates, consult the Developer Guide
+	// unsigned int falsepositive_rate = DPFJ_PROBABILITY_ONE / 100000;
+	// unsigned int nCandidateCnt = 2;
+	// DPFJ_CANDIDATE vCandidates[2];
+	//
 	// int result = dpfj_identify(
-	// 	DPFJ_FMD_ANSI_378_2004, 			// Format
-	// 	vFmd[nFingerCnt - 1],
-	// 	vFmdSize[nFingerCnt - 1],
-	// 	0,
 	// 	DPFJ_FMD_ANSI_378_2004,
-	// 	nFingerCnt - 1,
 	// 	vFmd,
 	// 	vFmdSize,
+	// 	0,
+	// 	DPFJ_FMD_ANSI_378_2004,
+	// 	2,
+	// 	finger_templates,
+	// 	finger_templates_size,
 	// 	falsepositive_rate,
 	// 	&nCandidateCnt,
 	// 	vCandidates
 	// );
 
+	unsigned int falsematch_rate;
+
+	int result = dpfj_compare(
+		DPFJ_FMD_ANSI_378_2004,
+		vFmd,
+		vFmdSize,
+		0,
+		DPFJ_FMD_ANSI_378_2004,
+		finger_templates[0],
+		finger_templates_size[0],
+		0,
+		&falsematch_rate
+	);
+
+
+	printf("dissimilarity score: 0x%x.\n", falsematch_rate);
+	printf("false match rate: %e.\n\n\n", (double)(falsematch_rate / DPFJ_PROBABILITY_ONE));
 
 	// ::: Close Device and Release Library :::
 	CloseReader(hReader);

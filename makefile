@@ -8,5 +8,12 @@ main: src/main.cpp
 test: src/test.cpp
 	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -ldpfpdd -ldpfj -o bin/$@.o
 
+capture: src/capture.cpp
+	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -ldpfpdd -ldpfj -o bin/$@.o
+
+read: src/read.cpp
+	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -ldpfpdd -ldpfj -o bin/$@.o
+
+
 clean:
 	rm bin/*.o
