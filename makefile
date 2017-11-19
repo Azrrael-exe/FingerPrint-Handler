@@ -14,6 +14,8 @@ capture: src/capture.cpp
 read: src/read.cpp
 	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -ldpfpdd -ldpfj -o bin/$@.o
 
-
 clean:
 	rm bin/*.o
+
+wipe:
+	rm data/*.bin
