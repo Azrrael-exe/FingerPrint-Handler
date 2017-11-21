@@ -3,7 +3,7 @@ LIB_OUT_DIR = /opt/DigitalPersona/urusdk-linux/Linux/lib
 COMPILER = g++
 
 main: src/main.cpp
-	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -ldpfpdd -ldpfj -o bin/$@.o
+	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -l dpfpdd -l dpfj -o bin/$@.o
 
 test: src/test.cpp
 	$(COMPILER) $? -I$(SDK_INCLUDES) -L $(LIB_OUT_DIR) -ldpfpdd -ldpfj -o bin/$@.o

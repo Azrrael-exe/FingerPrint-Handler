@@ -33,3 +33,6 @@
 
 #Finger Print Data
 *.bin
+
+*/build
+*.pyc
