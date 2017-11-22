@@ -17,8 +17,14 @@ static PyMethodDef module_methods[] = {
 };
 
 /* Initialize the module */
-PyMODINIT_FUNC init_u_are_u(void){
-  PyObject *m = Py_InitModule3("_u_are_u", module_methods, module_docstring);
+// PyMODINIT_FUNC init_u_are_u(void){
+//   PyObject *m = Py_InitModule3("_u_are_u", module_methods, module_docstring);
+//   if (m == NULL) return;
+// }
+
+/* Initialize the module */
+PyMODINIT_FUNC initu_are_u(void){
+  PyObject *m = Py_InitModule3("u_are_u", module_methods, module_docstring);
   if (m == NULL) return;
 }
 
