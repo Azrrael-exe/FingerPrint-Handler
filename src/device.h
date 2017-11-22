@@ -175,5 +175,4 @@ int CaptureFinger(const char* szFingerName, DPFPDD_DEV hReader, DPFJ_FMD_FORMAT 
 	return result;
 }
 
-
 #endif
