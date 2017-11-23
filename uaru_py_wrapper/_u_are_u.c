@@ -4,79 +4,22 @@
 /* Docstrings */
 static char module_docstring[] =
     "This module provides an interface to C.";
-static char response_docstring[] =
-    "Retunrs a constant int value.";
 
 /* Available functions */
+static PyObject *init_device(PyObject *self, PyObject *args);
 static PyObject *getFinger(PyObject *self, PyObject *args);
+static PyObject *compareFinger(PyObject *self, PyObject *args);
+static PyObject *identifyFinger(PyObject *self, PyObject *args);
 
 /* Module specification */
 static PyMethodDef module_methods[] = {
-    {"getFinger", getFinger, METH_VARARGS, NULL},
-    {NULL, NULL, 0, NULL}
+  {"init_device", init_device, 0, NULL},
+  {"getFinger", getFinger, METH_VARARGS, NULL},
+  {"compareFinger", compareFinger, METH_VARARGS, NULL},
+  {"identifyFinger", identifyFinger, 0, NULL}
 };
 
-
-char szReader[MAX_DEVICE_NAME_LENGTH]; 	//name of the selected reader
 DPFPDD_DEV hReader = NULL; 							//handle of the selected reader
-DPFPDD_DEV SelectAndOpenReader(char* szReader, size_t nReaderLen){
-	strncpy(szReader, "", nReaderLen);
-	unsigned int nReaderCnt = 1;
-	DPFPDD_DEV_INFO* pReaderInfo = (DPFPDD_DEV_INFO*)malloc(sizeof(DPFPDD_DEV_INFO) * nReaderCnt);
-	int bStop = 0;
-	while(!bStop){
-		//enumerate the readers
-		while(NULL != pReaderInfo){
-			unsigned int i = 0;
-			for(i = 0; i < nReaderCnt; i++){
-				pReaderInfo[i].size = sizeof(DPFPDD_DEV_INFO);
-			}
-
-			unsigned int nNewReaderCnt = nReaderCnt;
-			int result = dpfpdd_query_devices(&nNewReaderCnt, pReaderInfo);
-
-			//quit if error
-			if(DPFPDD_SUCCESS != result && DPFPDD_E_MORE_DATA != result){
-				printf("dpfpdd_query_devices() -> %u\n", result );
-				free(pReaderInfo);
-				pReaderInfo = NULL;
-				nReaderCnt = 0;
-				break;
-			}
-
-			//allocate memory if needed and do over
-			if(DPFPDD_E_MORE_DATA == result){
-				DPFPDD_DEV_INFO* pri = (DPFPDD_DEV_INFO*)realloc(pReaderInfo, sizeof(DPFPDD_DEV_INFO) * nNewReaderCnt);
-				pReaderInfo = pri;
-				nReaderCnt = nNewReaderCnt;
-				continue;
-			}
-
-			//success
-			nReaderCnt = nNewReaderCnt;
-			break;
-		}
-		//list readers
-		if(0 != nReaderCnt){
-			printf("Available reader:");
-			unsigned int i = 0;
-			for(i = 0; i < nReaderCnt; i++){
-				printf("  %s\n", pReaderInfo[i].name);
-				// printf("Index:  %u\n",i);
-			}
-			bStop = 1;
-		}
-		// else printf("\n\nNo readers available\n");
-	}
-	int result = dpfpdd_open(pReaderInfo[0].name, &hReader);
-	if(DPFPDD_SUCCESS == result){
-		printf("Device Open! \n");
-	}
-	else{
-		printf("Device Failed at Open :/ \n" );
-	}
-	return hReader;
-}
 
 /* Initialize the module */
 PyMODINIT_FUNC initu_are_u(void){
@@ -84,22 +27,52 @@ PyMODINIT_FUNC initu_are_u(void){
   if (m == NULL) return;
   else {
     dpfpdd_init();     // Initalize Library
-    // char szReader[MAX_DEVICE_NAME_LENGTH]; 	//name of the selected reader
-    // DPFPDD_DEV hReader = NULL; 							//handle of the selected reader
-    hReader = SelectAndOpenReader(szReader, sizeof(szReader));
+    hReader = SelectAndOpenReader();
   }
 }
 
+/* Initalize the Device */
+static PyObject *init_device(PyObject *self, PyObject *args){
+  PyObject *out = Py_BuildValue("i", 1);
+  return out;
+}
+
+/* Read the finger and get the fmd */
 static PyObject *getFinger(PyObject *self, PyObject *args){
   char* id;
   if (!PyArg_ParseTuple(args, "s", &id)) return NULL;
-
   unsigned char* vFmd;
   unsigned int vFmdSize;
-
   int result = CaptureFinger(id, hReader, &vFmd, &vFmdSize);
-  // std::string s(reinterpret_cast<char const*>(vFmd), vFmdSize);
-  std::string s(reinterpret_cast<char const*>(vFmd), vFmdSize);
-  PyObject *out = Py_BuildValue("{s:s#,s:i}", "fmd",vFmd, vFmdSize, "size", vFmdSize);
+  if(DPFPDD_SUCCESS == result){
+    PyObject *out = Py_BuildValue("{s:s,s:s#,s:i}","id", id, "fmd", reinterpret_cast<char const*>(vFmd), vFmdSize, "size", vFmdSize);
+    return out;
+	}
+  PyObject *out = Py_BuildValue("");
+  return out;
+}
+
+static PyObject *compareFinger(PyObject *self, PyObject *args){
+  unsigned char* vFmd;
+  unsigned int vFmdSize;
+  unsigned char* vFmd_reference;
+  unsigned int vFmdSize_reference;
+
+  if (!PyArg_ParseTuple(args, "s#is#i", &vFmd, &vFmdSize, &vFmdSize, &vFmd_reference, &vFmdSize_reference, &vFmdSize_reference)) return NULL;
+
+  for(unsigned int i=0; i < vFmdSize; i++){
+    printf("%u : %x\n", i, vFmd[i]);
+  }
+
+  for(unsigned int i=0; i < vFmdSize_reference; i++){
+    printf("%u : %x\n", i, vFmd_reference[i]);
+  }
+
+  PyObject *out = Py_BuildValue("");
+  return out;
+}
+
+static PyObject *identifyFinger(PyObject *self, PyObject *args){
+  PyObject *out = Py_BuildValue("");
   return out;
 }
