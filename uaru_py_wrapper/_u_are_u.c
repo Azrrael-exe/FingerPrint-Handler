@@ -60,19 +60,49 @@ static PyObject *compareFinger(PyObject *self, PyObject *args){
 
   if (!PyArg_ParseTuple(args, "s#is#i", &vFmd, &vFmdSize, &vFmdSize, &vFmd_reference, &vFmdSize_reference, &vFmdSize_reference)) return NULL;
 
-  for(unsigned int i=0; i < vFmdSize; i++){
-    printf("%u : %x\n", i, vFmd[i]);
-  }
+  // for(unsigned int i=0; i < vFmdSize; i++){
+  //   printf("%u : %x\n", i, vFmd[i]);
+  // }
+  //
+  // for(unsigned int i=0; i < vFmdSize_reference; i++){
+  //   printf("%u : %x\n", i, vFmd_reference[i]);
+  // }
 
-  for(unsigned int i=0; i < vFmdSize_reference; i++){
-    printf("%u : %x\n", i, vFmd_reference[i]);
-  }
+  unsigned int falsematch_rate;
 
-  PyObject *out = Py_BuildValue("");
+  int result = dpfj_compare(
+    DPFJ_FMD_ANSI_378_2004,
+    vFmd,
+    vFmdSize,
+    0,
+    DPFJ_FMD_ANSI_378_2004,
+    vFmd_reference,
+    vFmdSize_reference,
+    0,
+    &falsematch_rate
+  );
+
+  PyObject *out = Py_BuildValue("i", falsematch_rate);
   return out;
 }
 
 static PyObject *identifyFinger(PyObject *self, PyObject *args){
+
+  PyObject *int_list;
+  int len;
+  if (!PyArg_ParseTuple(args, "O", &int_list)) {
+    return NULL;
+  }
+  len = PyTuple_Size(int_list);
+  int array[len];
+  for(int i=0; i< len; i++){
+    array[i] = (int) PyInt_AsLong(PyTuple_GetItem(int_list, len));
+  }
+
+  for(int i=0; i < len; i++){
+    printf("%u : %x\n", i, array[i]);
+  }
+
   PyObject *out = Py_BuildValue("");
   return out;
 }
