@@ -16,7 +16,7 @@ static PyMethodDef module_methods[] = {
   {"init_device", init_device, 0, NULL},
   {"getFinger", getFinger, METH_VARARGS, NULL},
   {"compareFinger", compareFinger, METH_VARARGS, NULL},
-  {"identifyFinger", identifyFinger, 0, NULL}
+  {"identifyFinger", identifyFinger, METH_VARARGS, NULL}
 };
 
 DPFPDD_DEV hReader = NULL; 							//handle of the selected reader
@@ -88,19 +88,27 @@ static PyObject *compareFinger(PyObject *self, PyObject *args){
 
 static PyObject *identifyFinger(PyObject *self, PyObject *args){
 
-  PyObject *int_list;
+  PyObject *py_tuple;
   int len;
-  if (!PyArg_ParseTuple(args, "O", &int_list)) {
-    return NULL;
-  }
-  len = PyTuple_Size(int_list);
-  int array[len];
-  for(int i=0; i< len; i++){
-    array[i] = (int) PyInt_AsLong(PyTuple_GetItem(int_list, len));
+  if (!PyArg_ParseTuple(args, "O", &py_tuple)) return NULL;
+  len = PyTuple_Size(py_tuple);
+
+  unsigned int int_array[len/2];
+  unsigned char* char_array[len/2];
+
+  printf("len : %u\n", len);
+
+  // --- Longitudes ---
+  for(int i = 0; i < len/2; i++){
+    int_array[i] = (int) PyInt_AsLong(PyTuple_GetItem(py_tuple, (i*2)+1));
+    printf("%u : %u\n", i, int_array[i]);
   }
 
-  for(int i=0; i < len; i++){
-    printf("%u : %x\n", i, array[i]);
+  // --- Chars ---
+  for(int i = 0; i < len/2; i++){
+    strncpy(char_array[i], static_cast<unsigned char*>(PyTuple_GetItem(py_tuple ,i)), int_array[i]);
+    // int_array[i] = (int) PyInt_AsLong(PyTuple_GetItem(py_tuple, (i*2)+1));
+    printf("%u : %s\n", i, char_array[i]);
   }
 
   PyObject *out = Py_BuildValue("");
