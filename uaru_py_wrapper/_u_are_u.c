@@ -60,14 +60,6 @@ static PyObject *compareFinger(PyObject *self, PyObject *args){
 
   if (!PyArg_ParseTuple(args, "s#is#i", &vFmd, &vFmdSize, &vFmdSize, &vFmd_reference, &vFmdSize_reference, &vFmdSize_reference)) return NULL;
 
-  // for(unsigned int i=0; i < vFmdSize; i++){
-  //   printf("%u : %x\n", i, vFmd[i]);
-  // }
-  //
-  // for(unsigned int i=0; i < vFmdSize_reference; i++){
-  //   printf("%u : %x\n", i, vFmd_reference[i]);
-  // }
-
   unsigned int falsematch_rate;
 
   int result = dpfj_compare(
@@ -93,22 +85,47 @@ static PyObject *identifyFinger(PyObject *self, PyObject *args){
   if (!PyArg_ParseTuple(args, "O", &py_tuple)) return NULL;
   len = PyTuple_Size(py_tuple);
 
-  unsigned int int_array[len/2];
-  unsigned char* char_array[len/2];
+  unsigned char* finger;
+  unsigned int finger_size;
 
-  printf("len : %u\n", len);
+  finger = (unsigned char*) PyString_AsString(PyTuple_GetItem(py_tuple , 0));
+  finger_size = (int) PyInt_AsLong(PyTuple_GetItem(py_tuple, 1));
 
-  // --- Longitudes ---
-  for(int i = 0; i < len/2; i++){
-    int_array[i] = (int) PyInt_AsLong(PyTuple_GetItem(py_tuple, (i*2)+1));
-    printf("%u : %u\n", i, int_array[i]);
-  }
+  unsigned int int_array[(len/2)-1];
+  unsigned char* char_array[(len/2)-1];
+
+  // printf("len : %u\n", len);
 
   // --- Chars ---
-  for(int i = 0; i < len/2; i++){
-    strncpy(char_array[i], static_cast<unsigned char*>(PyTuple_GetItem(py_tuple ,i)), int_array[i]);
-    // int_array[i] = (int) PyInt_AsLong(PyTuple_GetItem(py_tuple, (i*2)+1));
-    printf("%u : %s\n", i, char_array[i]);
+  for(int i = 1; i < len/2; i++){
+    char_array[i] = (unsigned char*) PyString_AsString(PyTuple_GetItem(py_tuple ,i*2));
+    // printf("%u : %s\n", i, char_array[i]);
+  }
+
+  // --- Longitudes ---
+  for(int i = 1; i < len/2; i++){
+    int_array[i] = (int) PyInt_AsLong(PyTuple_GetItem(py_tuple, (i*2)+1));
+    // printf("%u : %u\n", i, int_array[i]);
+  }
+
+
+  unsigned int falsepositive_rate = DPFJ_PROBABILITY_ONE / 100000;
+  unsigned int nFingerCnt = (len/2)-1;
+  unsigned int nCandidateCnt = (len/2)-1;
+  DPFJ_CANDIDATE vCandidates[(len/2)-1];
+
+  int result = dpfj_identify(
+    DPFJ_FMD_ANSI_378_2004, finger, finger_size, 0,
+    DPFJ_FMD_ANSI_378_2004,
+    nFingerCnt, char_array, int_array,
+    falsepositive_rate,
+    &nCandidateCnt,
+    vCandidates
+  );
+
+  if(DPFPDD_SUCCESS == result){
+    PyObject *out = Py_BuildValue("{s:i,s:i,s:i}","result", result, "candidates", nCandidateCnt, "index", vCandidates[0].fmd_idx);
+    return out;
   }
 
   PyObject *out = Py_BuildValue("");
