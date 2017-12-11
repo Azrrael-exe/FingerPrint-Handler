@@ -10,7 +10,7 @@ fingers = db['finger']
 finger_list = []
 candidates = []
 
-for i in xrange(5):
+for i in xrange(20):
     for finger in fingers.find({}):
         finger_list.append(finger['fmd'].decode('hex'))
         finger_list.append(finger['size'])
